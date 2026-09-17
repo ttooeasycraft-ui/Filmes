@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Festa de Cinema</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0f0f0f;
+    color: #f1f1f1;
+    font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    min-height: 100vh;
+  }
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    background: #181818;
+    border-bottom: 1px solid #2a2a2a;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+  .topbar .logo {
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+  .topbar .badge {
+    background: #ff3b3b;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+  }
+  .container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+  h1 { display: none; }
+  .subtitle { display: none; }
+
+  #countdown-screen {
+    background: linear-gradient(160deg, #16162a, #0b0b12);
+    border: 1px solid #2a2a40;
+    border-radius: 18px;
+    padding: 40px 20px;
+    text-align: center;
+  }
+  .timer {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin: 20px 0 10px;
+  }
+  .timer-box {
+    background: #1c1c30;
+    border-radius: 12px;
+    padding: 16px 14px;
+    min-width: 72px;
+  }
+  .timer-box .num {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #ff5a5f;
+    display: block;
+  }
+  .timer-box .label {
+    font-size: 0.7rem;
+    color: #a0a0b0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .date-info {
+    margin-top: 18px;
+    color: #c0c0d0;
+    font-size: 0.9rem;
+  }
+
+  #main-screen {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  #video-col { width: 100%; }
+  @media (min-width: 900px) {
+    #main-screen { flex-direction: row; }
+    #video-col { flex: 1; min-width: 0; }
+    #chat-col { width: 360px; flex-shrink: 0; }
+  }
+
+  #video-screen { display: none; }
+
+  .video-wrapper {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #000;
+  }
+  .video-wrapper iframe {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    border: 0;
+  }
+
+  .video-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-top: 14px;
+  }
+
+  .viewer-count {
+    margin-top: 6px;
+    font-size: 0.85rem;
+    color: #aaa;
+    display: flex;
+    align-items: center;
+  }
+  .viewer-count .dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    background: #ff3b3b;
+    border-radius: 50%;
+    margin-right: 6px;
+    box-shadow: 0 0 0 3px rgba(255,59,59,0.2);
+  }
+
+  #chat-col {
+    background: #181818;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    height: 480px;
+    width: 100%;
+  }
+  .chat-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid #2a2a2a;
+    font-size: 0.9rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  #chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .chat-msg {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 0.85rem;
+    line-height: 1.35;
+  }
+  .avatar {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #0f0f0f;
+  }
+  .chat-msg .bubble { word-break: break-word; }
+  .chat-msg .name {
+    font-weight: 700;
+    margin-right: 5px;
+    font-size: 0.8rem;
+  }
+  .chat-msg .text { color: #e4e4e4; }
+  .chat-input-row {
+    display: flex;
+    border-top: 1px solid #2a2a2a;
+    padding: 10px;
+    gap: 8px;
+  }
+  .chat-input-row input {
+    flex: 1;
+    background: #0f0f0f;
+    border: 1px solid #2a2a2a;
+    border-radius: 20px;
+    padding: 10px 14px;
+    color: #f1f1f1;
+    font-size: 0.85rem;
+    outline: none;
+  }
+  .chat-input-row input:focus { border-color: #ff3b3b; }
+  .chat-input-row button {
+    background: #ff3b3b;
+    border: none;
+    border-radius: 20px;
+    padding: 0 18px;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  #nickname-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 10;
+  }
+  #nickname-modal.hidden { display: none; }
+  .modal-box {
+    background: #16162a;
+    border: 1px solid #2a2a40;
+    border-radius: 16px;
+    padding: 28px 24px;
+    max-width: 340px;
+    width: 100%;
+    text-align: center;
+  }
+  .modal-box h2 { font-size: 1.1rem; margin-bottom: 6px; }
+  .modal-box p { color: #a0a0b0; font-size: 0.85rem; margin-bottom: 16px; }
+  .modal-box input {
+    width: 100%;
+    background: #1c1c30;
+    border: 1px solid #2a2a40;
+    border-radius: 8px;
+    padding: 12px;
+    color: #f5f5f5;
+    font-size: 0.95rem;
+    outline: none;
+    margin-bottom: 12px;
+  }
+  .modal-box button {
+    width: 100%;
+    background: #ff5a5f;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+
+  footer {
+    margin-top: 24px;
+    color: #55556a;
+    font-size: 0.75rem;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <span class="logo">🎬 Festa de Cinema</span>
+    <span class="badge">AO VIVO</span>
+  </div>
+  <div class="container">
+    <div id="main-screen">
+      <div id="video-col">
+        <div id="countdown-screen">
+          <p style="color:#c0c0d0; font-size:0.95rem;">A sessão começa em:</p>
+          <div class="timer">
+            <div class="timer-box"><span class="num" id="dd">00</span><span class="label">dias</span></div>
+            <div class="timer-box"><span class="num" id="hh">00</span><span class="label">horas</span></div>
+            <div class="timer-box"><span class="num" id="mm">00</span><span class="label">min</span></div>
+            <div class="timer-box"><span class="num" id="ss">00</span><span class="label">seg</span></div>
+          </div>
+          <p class="date-info">Sábado, 19/09/2026 às 20:00 (horário de Brasília)</p>
+        </div>
+
+        <div id="video-screen">
+          <div class="video-wrapper">
+            <iframe
+              id="bunny-player"
+              src="https://iframe.mediadelivery.net/embed/752678/e748458a-d119-4d67-bfe8-29fcc6c43dbc?autoplay=true&loop=false&muted=false&preload=true&responsive=true"
+              loading="lazy"
+              allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;fullscreen;"
+              allowfullscreen="true">
+            </iframe>
+          </div>
+          <p class="video-title">Sessão da galera — assistindo juntos agora</p>
+          <p class="viewer-count"><span class="dot"></span><span id="viewer-total">1</span> pessoa(s) assistindo agora</p>
+          <p id="sync-status" style="font-size:0.75rem; color:#5a5;"></p>
+        </div>
+      </div>
+
+      <div id="chat-col">
+        <div class="chat-header">💬 Chat ao vivo</div>
+        <div id="chat-messages"></div>
+        <div class="chat-input-row">
+          <input type="text" id="chat-input" placeholder="Escreva algo..." maxlength="200">
+          <button id="chat-send">Enviar</button>
+        </div>
+      </div>
+    </div>
+
+    <footer>Atualize a página se o vídeo não aparecer automaticamente na hora.</footer>
+  </div>
+
+  <div id="nickname-modal">
+    <div class="modal-box">
+      <h2>Bem-vindo(a)! 👋</h2>
+      <p>Escolhe um apelido pra entrar na sala e usar o chat</p>
+      <input type="text" id="nickname-input" placeholder="Seu apelido" maxlength="20">
+      <button id="nickname-confirm">Entrar</button>
+    </div>
+  </div>
+
+  <script src="//assets.mediadelivery.net/playerjs/playerjs-latest.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+
+  <script>
+    var firebaseConfig = {
+      apiKey: "AIzaSyBaftg5ThsdM2E2QIC3CgWF9mJL8NXATGw",
+      authDomain: "festa-cinema.firebaseapp.com",
+      databaseURL: "https://festa-cinema-default-rtdb.firebaseio.com",
+      projectId: "festa-cinema",
+      storageBucket: "festa-cinema.firebasestorage.app",
+      messagingSenderId: "868310174296",
+      appId: "1:868310174296:web:a9efa8076b7f829fe3182d"
+    };
+    firebase.initializeApp(firebaseConfig);
+    var db = firebase.database();
+
+    var targetTime = new Date("2026-09-19T20:00:00-03:00").getTime();
+
+    function updateCountdown() {
+      var now = new Date().getTime();
+      var diff = targetTime - now;
+
+      if (diff <= 0) {
+        document.getElementById("countdown-screen").style.display = "none";
+        document.getElementById("video-screen").style.display = "block";
+        clearInterval(timerInterval);
+        initSync();
+        return;
+      }
+
+      var d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      var h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      var m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      var s = Math.floor((diff % (1000 * 60)) / 1000);
+
+      document.getElementById("dd").textContent = String(d).padStart(2, "0");
+      document.getElementById("hh").textContent = String(h).padStart(2, "0");
+      document.getElementById("mm").textContent = String(m).padStart(2, "0");
+      document.getElementById("ss").textContent = String(s).padStart(2, "0");
+    }
+    updateCountdown();
+    var timerInterval = setInterval(updateCountdown, 1000);
+
+    var nickname = "";
+    var myPresenceRef = null;
+
+    document.getElementById("nickname-confirm").addEventListener("click", enterRoom);
+    document.getElementById("nickname-input").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") enterRoom();
+    });
+
+    function enterRoom() {
+      var input = document.getElementById("nickname-input");
+      var val = input.value.trim();
+      if (!val) { input.focus(); return; }
+      nickname = val;
+      document.getElementById("nickname-modal").classList.add("hidden");
+
+      myPresenceRef = db.ref("presence").push();
+      myPresenceRef.set({ nickname: nickname, joinedAt: Date.now() });
+      myPresenceRef.onDisconnect().remove();
+
+      db.ref("presence").on("value", function(snap) {
+        var count = snap.numChildren();
+        document.getElementById("viewer-total").textContent = count > 0 ? count : 1;
+      });
+    }
+
+    var chatMessagesEl = document.getElementById("chat-messages");
+
+    var avatarColors = ["#ff3b3b","#ffb020","#4ade80","#38bdf8","#a78bfa","#f472b6","#fb923c","#34d399"];
+    function colorFor(name) {
+      var sum = 0;
+      for (var i = 0; i < name.length; i++) sum += name.charCodeAt(i);
+      return avatarColors[sum % avatarColors.length];
+    }
+
+    db.ref("chat").limitToLast(100).on("child_added", function(snap) {
+      var msg = snap.val();
+      var row = document.createElement("div");
+      row.className = "chat-msg";
+
+      var avatar = document.createElement("div");
+      avatar.className = "avatar";
+      avatar.style.background = colorFor(msg.nickname);
+      avatar.textContent = msg.nickname.charAt(0).toUpperCase();
+
+      var bubble = document.createElement("div");
+      bubble.className = "bubble";
+      var nameSpan = document.createElement("span");
+      nameSpan.className = "name";
+      nameSpan.style.color = colorFor(msg.nickname);
+      nameSpan.textContent = msg.nickname;
+      var textSpan = document.createElement("span");
+      textSpan.className = "text";
+      textSpan.textContent = msg.text;
+      bubble.appendChild(nameSpan);
+      bubble.appendChild(textSpan);
+
+      row.appendChild(avatar);
+      row.appendChild(bubble);
+      chatMessagesEl.appendChild(row);
+      chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+    });
+
+    function sendMessage() {
+      var input = document.getElementById("chat-input");
+      var text = input.value.trim();
+      if (!text || !nickname) return;
+      db.ref("chat").push({ nickname: nickname, text: text, sentAt: Date.now() });
+      input.value = "";
+    }
+
+    document.getElementById("chat-send").addEventListener("click", sendMessage);
+    document.getElementById("chat-input").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") sendMessage();
+    });
+
+    // ===== SINCRONIZAÇÃO DO VÍDEO ENTRE TODO MUNDO =====
+    var socket = io();
+    var bunnyPlayer = null;
+    var applyingRemote = false; // evita loop infinito de eventos
+    var pendingInitState = null;
+
+    socket.on("init", function(state) {
+      pendingInitState = state;
+      if (bunnyPlayer) applyInitState();
+    });
+
+    socket.on("sync", function(data) {
+      if (!bunnyPlayer) return;
+      applyingRemote = true;
+      if (data.type === "play") {
+        bunnyPlayer.setCurrentTime(data.time);
+        bunnyPlayer.play();
+      } else if (data.type === "pause") {
+        bunnyPlayer.setCurrentTime(data.time);
+        bunnyPlayer.pause();
+      } else if (data.type === "seek") {
+        bunnyPlayer.setCurrentTime(data.time);
+      } else if (data.type === "ended") {
+        bunnyPlayer.pause();
+        document.getElementById("sync-status").textContent = "A sessão terminou para todo mundo. 🎬";
+      }
+      setTimeout(function() { applyingRemote = false; }, 400);
+    });
+
+    function applyInitState() {
+      if (!pendingInitState) return;
+      applyingRemote = true;
+      bunnyPlayer.setCurrentTime(pendingInitState.currentTime);
+      if (pendingInitState.ended) {
+        bunnyPlayer.pause();
+        document.getElementById("sync-status").textContent = "A sessão já terminou. 🎬";
+      } else if (pendingInitState.isPlaying) {
+        bunnyPlayer.play();
+      } else {
+        bunnyPlayer.pause();
+      }
+      setTimeout(function() { applyingRemote = false; }, 600);
+    }
+
+    function initSync() {
+      var iframeEl = document.getElementById("bunny-player");
+      bunnyPlayer = new playerjs.Player(iframeEl);
+
+      bunnyPlayer.on("ready", function() {
+        document.getElementById("sync-status").textContent = "Sincronizado com a galera ✅";
+        if (pendingInitState) applyInitState();
+
+        bunnyPlayer.on("play", function() {
+          if (applyingRemote) return;
+          bunnyPlayer.getCurrentTime(function(t) {
+            socket.emit("playerEvent", { type: "play", time: t });
+          });
+        });
+
+        bunnyPlayer.on("pause", function() {
+          if (applyingRemote) return;
+          bunnyPlayer.getCurrentTime(function(t) {
+            socket.emit("playerEvent", { type: "pause", time: t });
+          });
+        });
+
+        bunnyPlayer.on("seeked", function() {
+          if (applyingRemote) return;
+          bunnyPlayer.getCurrentTime(function(t) {
+            socket.emit("playerEvent", { type: "seek", time: t });
+          });
+        });
+
+        bunnyPlayer.on("ended", function() {
+          if (applyingRemote) return;
+          socket.emit("playerEvent", { type: "ended", time: 0 });
+          document.getElementById("sync-status").textContent = "A sessão terminou para todo mundo. 🎬";
+        });
+      });
+    }
+  </script>
+</body>
+</html>
