@@ -281,7 +281,7 @@
             <div class="timer-box"><span class="num" id="mm">00</span><span class="label">min</span></div>
             <div class="timer-box"><span class="num" id="ss">00</span><span class="label">seg</span></div>
           </div>
-          <p class="date-info">Domingo, 20/09/2026 às 20:00 (horário de Brasília)</p>
+          <p class="date-info">Sábado, 19/09/2026 às 20:00 (horário de Brasília)</p>
         </div>
 
         <div id="video-screen">
@@ -293,10 +293,14 @@
               allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;fullscreen;"
               allowfullscreen="true">
             </iframe>
+            <div style="position:absolute; inset:0; z-index:3; cursor:default;"></div>
+            <div style="position:absolute; top:10px; left:10px; z-index:4; background:rgba(0,0,0,0.75); color:#fff; padding:6px 12px; border-radius:20px; font-size:0.75rem; font-weight:700; display:flex; align-items:center; gap:6px;">
+              🔒 O vídeo toca sozinho pra todo mundo
+            </div>
           </div>
           <p class="video-title">Sessão da galera — assistindo juntos agora</p>
           <p class="viewer-count"><span class="dot"></span><span id="viewer-total">1</span> pessoa(s) assistindo agora</p>
-          <p id="sync-status" style="font-size:0.75rem; color:#5a5;"></p>
+          <p style="font-size:0.8rem; color:#aaa; font-weight:600;">👀 Ninguém controla o vídeo — ele começa e termina no mesmo momento pra todo mundo, sem risco de alguém mexer.</p>
         </div>
       </div>
 
@@ -323,7 +327,6 @@
   </div>
 
   <script src="//assets.mediadelivery.net/playerjs/playerjs-latest.min.js"></script>
-  <script src="/socket.io/socket.io.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 
@@ -340,7 +343,7 @@
     firebase.initializeApp(firebaseConfig);
     var db = firebase.database();
 
-    var targetTime = new Date("2026-09-20T20:00:00-03:00").getTime();
+    var targetTime = new Date("2026-09-19T20:00:00-03:00").getTime();
 
     function updateCountdown() {
       var now = new Date().getTime();
@@ -350,7 +353,6 @@
         document.getElementById("countdown-screen").style.display = "none";
         document.getElementById("video-screen").style.display = "block";
         clearInterval(timerInterval);
-        initSync();
         return;
       }
 
@@ -442,86 +444,6 @@
       if (e.key === "Enter") sendMessage();
     });
 
-    // ===== SINCRONIZAÇÃO DO VÍDEO ENTRE TODO MUNDO =====
-    var socket = io();
-    var bunnyPlayer = null;
-    var applyingRemote = false; // evita loop infinito de eventos
-    var pendingInitState = null;
-
-    socket.on("init", function(state) {
-      pendingInitState = state;
-      if (bunnyPlayer) applyInitState();
-    });
-
-    socket.on("sync", function(data) {
-      if (!bunnyPlayer) return;
-      applyingRemote = true;
-      if (data.type === "play") {
-        bunnyPlayer.setCurrentTime(data.time);
-        bunnyPlayer.play();
-      } else if (data.type === "pause") {
-        bunnyPlayer.setCurrentTime(data.time);
-        bunnyPlayer.pause();
-      } else if (data.type === "seek") {
-        bunnyPlayer.setCurrentTime(data.time);
-      } else if (data.type === "ended") {
-        bunnyPlayer.pause();
-        document.getElementById("sync-status").textContent = "A sessão terminou para todo mundo. 🎬";
-      }
-      setTimeout(function() { applyingRemote = false; }, 400);
-    });
-
-    function applyInitState() {
-      if (!pendingInitState) return;
-      applyingRemote = true;
-      bunnyPlayer.setCurrentTime(pendingInitState.currentTime);
-      if (pendingInitState.ended) {
-        bunnyPlayer.pause();
-        document.getElementById("sync-status").textContent = "A sessão já terminou. 🎬";
-      } else if (pendingInitState.isPlaying) {
-        bunnyPlayer.play();
-      } else {
-        bunnyPlayer.pause();
-      }
-      setTimeout(function() { applyingRemote = false; }, 600);
-    }
-
-    function initSync() {
-      var iframeEl = document.getElementById("bunny-player");
-      bunnyPlayer = new playerjs.Player(iframeEl);
-
-      bunnyPlayer.on("ready", function() {
-        document.getElementById("sync-status").textContent = "Sincronizado com a galera ✅";
-        if (pendingInitState) applyInitState();
-
-        bunnyPlayer.on("play", function() {
-          if (applyingRemote) return;
-          bunnyPlayer.getCurrentTime(function(t) {
-            socket.emit("playerEvent", { type: "play", time: t });
-          });
-        });
-
-        bunnyPlayer.on("pause", function() {
-          if (applyingRemote) return;
-          bunnyPlayer.getCurrentTime(function(t) {
-            socket.emit("playerEvent", { type: "pause", time: t });
-          });
-        });
-
-        bunnyPlayer.on("seeked", function() {
-          if (applyingRemote) return;
-          bunnyPlayer.getCurrentTime(function(t) {
-            socket.emit("playerEvent", { type: "seek", time: t });
-          });
-        });
-
-        bunnyPlayer.on("ended", function() {
-          if (applyingRemote) return;
-          socket.emit("playerEvent", { type: "ended", time: 0 });
-          document.getElementById("sync-status").textContent = "A sessão terminou para todo mundo. 🎬";
-        });
-      });
-    }
   </script>
 </body>
 </html>
