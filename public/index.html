@@ -281,7 +281,7 @@
             <div class="timer-box"><span class="num" id="mm">00</span><span class="label">min</span></div>
             <div class="timer-box"><span class="num" id="ss">00</span><span class="label">seg</span></div>
           </div>
-          <p class="date-info">Sábado, 19/09/2026 às 20:00 (horário de Brasília)</p>
+          <p class="date-info">Domingo, 20/09/2026 às 20:00 (horário de Brasília)</p>
         </div>
 
         <div id="video-screen">
@@ -294,13 +294,12 @@
               allowfullscreen="true">
             </iframe>
             <div style="position:absolute; inset:0; z-index:3; cursor:default;"></div>
-            <div style="position:absolute; top:10px; left:10px; z-index:4; background:rgba(0,0,0,0.75); color:#fff; padding:6px 12px; border-radius:20px; font-size:0.75rem; font-weight:700; display:flex; align-items:center; gap:6px;">
-              🔒 O vídeo toca sozinho pra todo mundo
+            <div style="position:absolute; top:10px; left:10px; z-index:4; background:rgba(0,0,0,0.75); color:#fff; padding:6px 12px; border-radius:20px; font-size:0.75rem; font-weight:700;">
+              🔒 Modo espectador
             </div>
           </div>
           <p class="video-title">Sessão da galera — assistindo juntos agora</p>
           <p class="viewer-count"><span class="dot"></span><span id="viewer-total">1</span> pessoa(s) assistindo agora</p>
-          <p style="font-size:0.8rem; color:#aaa; font-weight:600;">👀 Ninguém controla o vídeo — ele começa e termina no mesmo momento pra todo mundo, sem risco de alguém mexer.</p>
         </div>
       </div>
 
@@ -343,7 +342,7 @@
     firebase.initializeApp(firebaseConfig);
     var db = firebase.database();
 
-    var targetTime = new Date("2026-09-19T20:00:00-03:00").getTime();
+    var targetTime = new Date("2026-09-20T20:00:00-03:00").getTime();
 
     function updateCountdown() {
       var now = new Date().getTime();
